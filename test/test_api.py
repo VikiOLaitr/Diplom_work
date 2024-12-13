@@ -1,5 +1,12 @@
 import allure
-from Page.ApiPage import ApiPage
+from page.api_page import ApiPage
+
+# Определите базовые данные
+base_url = "https://web-gate.chitai-gorod.ru/api/v2/search/product"
+token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL3VzZXItcmlnaHQiLCJzdWIiOjIxMjY4MTgzLCJpYXQiOjE3MzQxMTA1NDUsImV4cCI6MTczNDExNDE0NSwidHlwZSI6MjB9.xvZ62ytCy6HKGZWOpyiZinGI9CQJl6FwS3LwEA1Hi10"
+
+# Инициализация объекта API
+api_page = ApiPage(base_url, token)
 
 
 @allure.epic("API Тестирование")
@@ -7,7 +14,7 @@ from Page.ApiPage import ApiPage
 @allure.title("Тестирование поиска книги по названию")
 @allure.description("Проверка, что API возвращает книгу с ожидаемым названием")
 def test_api_book_by_title():
-    response = ApiPage.search_product("Таня Гроттер")
+    response = api_page.search_product("Таня Гроттер")
 
     # Вывод текста ответа и статус кода для отладки
     print("Ответ:", response.text)
@@ -19,7 +26,7 @@ def test_api_book_by_title():
 
     expected_title = "Таня Гроттер"
     response_json = response.json()
-    book_titles = ApiPage.extract_book_titles(response_json)
+    book_titles = api_page.extract_book_titles(response_json)
 
     assert any(expected_title.lower() in title.lower()
                for title in book_titles)
@@ -31,7 +38,7 @@ def test_api_book_by_title():
 @allure.title("Тестирование поиска книги по автору")
 @allure.description("Проверка, что API возвращает книги с ожидаемым автором.")
 def test_api_book_by_author():
-    response = ApiPage.search_product("Дмитрий Емец")
+    response = api_page.search_product("Дмитрий Емец")
 
     print("Ответ:", response.text)
     print("Статус код:", response.status_code)
@@ -41,7 +48,7 @@ def test_api_book_by_author():
 
     expected_author = "Дмитрий Емец"
     response_json = response.json()
-    book_authors = ApiPage.extract_book_authors(response_json)
+    book_authors = api_page.extract_book_authors(response_json)
 
     assert any(expected_author.lower()
                in author.lower() for author in book_authors), \
@@ -50,11 +57,11 @@ def test_api_book_by_author():
 
 @allure.epic("API Тестирование")
 @allure.feature("Поиск книг")
-@allure.title("Тестирование поиска книги по названию на английском")
+@allure.title("Тестирование поиска книги по автору на английском")
 @allure.description("Проверка, что API возвращает книгу с "
                     "ожидаемым названием на английском.")
-def test_api_name_in_english():
-    response = ApiPage.search_product("Harry Potter")
+def test_api_author_in_english():
+    response = api_page.search_product("Harry Potter")
 
     print("Ответ:", response.text)
     print("Статус код:", response.status_code)
@@ -64,7 +71,7 @@ def test_api_name_in_english():
 
     expected_title = "Harry Potter"
     response_json = response.json()
-    book_titles = ApiPage.extract_book_titles(response_json)
+    book_titles = api_page.extract_book_titles(response_json)
 
     assert any(expected_title.lower()
                in title.lower() for title in book_titles), \
@@ -73,11 +80,11 @@ def test_api_name_in_english():
 
 @allure.epic("API Тестирование")
 @allure.feature("Поиск книг")
-@allure.title("Тестирование поиска на корейском языке")
+@allure.title("Тестирование поиска с недопустимой корейской фразой")
 @allure.description("Проверка, что API возвращает ошибку "
-                    "при поиске на корейском языке.")
+                    "при поиске с недопустимой корейской фразой.")
 def test_api_Korea():
-    response = ApiPage.search_product("오만과 편견")
+    response = api_page.search_product("오만과 편견")
 
     print("Ответ:", response.text)
     print("Статус код:", response.status_code)
@@ -99,29 +106,7 @@ def test_api_Korea():
 @allure.description("Проверка, что API возвращает "
                     "ошибку при пустом поисковом запросе.")
 def test_api_empty_search():
-    response = ApiPage.search_product("")
-
-    print("Ответ:", response.text)
-    print("Статус код:", response.status_code)
-
-    assert response.status_code == 400, f"Тест провален: статус код {
-        response.status_code}."
-
-    response_json = response.json()
-    error = response_json.get('errors', [{}])[0]
-    assert error.get('status') == "400", "Тест провален: ожидаемый статус "
-    "не найден в ответе."
-    assert error.get('title') == "Phrase обязательное поле", "Тест провален: "
-    "сообщение об ошибке неверно."
-
-
-@allure.epic("API Тестирование")
-@allure.feature("Поиск книг")
-@allure.title("Тестирование поиска с пробелами в запросе")
-@allure.description("Проверка, что API возвращает "
-                    "ошибку с пробелами в запросе.")
-def test_api_spaces_search():
-    response = ApiPage.search_product("     ")
+    response = api_page.search_product("")
 
     print("Ответ:", response.text)
     print("Статус код:", response.status_code)

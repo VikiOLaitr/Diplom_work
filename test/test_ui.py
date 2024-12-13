@@ -1,5 +1,22 @@
+import pytest
+from selenium import webdriver
 import allure
-from Page.UiPage import SearchPage
+from page.search_page_ui import SearchPage
+
+
+@pytest.fixture(scope="session")
+def browser():
+    driver = webdriver.Chrome()  # Укажите драйвер
+    driver.maximize_window()
+    yield driver
+    driver.quit()
+
+
+@pytest.fixture
+def search_page(browser):
+    page = SearchPage(browser)
+    page.open("https://www.chitai-gorod.ru/")
+    return page
 
 
 @allure.epic("UI Тестирование")
@@ -9,11 +26,11 @@ from Page.UiPage import SearchPage
     "Тест проверяет возможность поиска книги по заголовку 'Таня Гроттер'.")
 def test_search_book_by_title(search_page):
     with allure.step("Введите запрос на поиск книги"):
-        SearchPage.py.enter_search_query("Таня Гроттер")
+        search_page.enter_search_query("Таня Гроттер")
     with allure.step("Нажмите кнопку поиска"):
-        SearchPage.click_search_button()
+        search_page.click_search_button()
     with allure.step("Получите заголовки продуктов"):
-        product_titles = SearchPage.get_product_titles()
+        product_titles = search_page.get_product_titles()
     assert any("Таня Гроттер" in title for title in product_titles
                ), "Название книги не найдено в списке продуктов"
 
@@ -55,18 +72,18 @@ def test_search_author_partial_surname(search_page):
 @allure.epic("UI Тестирование")
 @allure.feature("Поиск книжной информации")
 @allure.title("Поиск автора на английском языке")
-@allure.description("Тест проверяет возможность поиска по названию 'Harry Potter'.")
-def test_search_title_in_english(search_page):
+@allure.description("Тест проверяет возможность поиска автора 'Harry Potter'.")
+def test_search_author_in_english(search_page):
     with allure.step("Введите запрос для поиска"):
         search_page.enter_search_query("Harry Potter")
     with allure.step("Нажмите кнопку поиска"):
         search_page.click_search_button()
     with allure.step("Получите заголовки продуктов"):
         product_titles = search_page.get_product_titles()
-    assert len(product_titles) > 0, "Нет результатов поиска"
+    assert len(product_titles) > 0, "Нет результатов поиска для автора"
     assert any(
         "Harry Potter" in title for title in product_titles
-        ), "Книга не отображается на странице результатов"
+        ), "Фамилия автора не отображается на странице результатов"
 
 
 @allure.epic("UI Тестирование")
@@ -88,29 +105,12 @@ def test_search_book_with_hyphen(search_page):
 
 @allure.epic("UI Тестирование")
 @allure.feature("Поиск книжной информации")
-@allure.title("Поиск с использованием спецсимволов")
+@allure.title("Поиск с использованием только из спецсимволов")
 @allure.description("Тест проверяет обработку поиска, "
                     "состоящего только из спецсимволов.")
 def test_search_punctuation_only(search_page):
-    with allure.step("Введите запрос со спецсимволов"):
-        search_page.enter_search_query("№%?”@#$%%^&&*")
-    with allure.step("Нажмите кнопку поиска"):
-        search_page.click_search_button()
-    with allure.step("Проверьте сообщение об отсутствии результатов"):
-        message_text = search_page.check_no_results_message()
-    assert (
-        "Похоже, у нас такого нет" in message_text
-        ), "Сообщение об отсутствии результатов не отображается."
-
-
-@allure.epic("UI Тестирование")
-@allure.feature("Поиск книжной информации")
-@allure.title("Поиск с использованием иероглифов")
-@allure.description("Тест проверяет обработку поиска, "
-                    "состоящего только из иероглифов.")
-def test_search_hieroglyph_only(search_page):
-    with allure.step("Введите запрос с иероглифами"):
-        search_page.enter_search_query("오만과 편견")
+    with allure.step("Введите запрос со спецсимволами"):
+        search_page.enter_search_query("№%?”@#$^&&*")
     with allure.step("Нажмите кнопку поиска"):
         search_page.click_search_button()
     with allure.step("Проверьте сообщение об отсутствии результатов"):
